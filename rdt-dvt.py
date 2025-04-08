@@ -1,91 +1,48 @@
 import praw
 import os
-import time
 import random
-import schedule
-import logging
-from dotenv import load_dotenv
+import time
 
-# Set up logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[logging.FileHandler('reddit_upvoter.log'), logging.StreamHandler()]
-)
-logger = logging.getLogger('reddit_upvoter')
-
-# Load environment variables
-load_dotenv()
-
-def reddit_login():
-    """Connect to Reddit API"""
+def downvote_post():
+    """Find and downvote a post from a chosen subreddit"""
     try:
-        reddit = praw.Reddit(
-            client_id=os.getenv('REDDIT_CLIENT_ID'),
-            client_secret=os.getenv('REDDIT_CLIENT_SECRET'),
-            username=os.getenv('REDDIT_USERNAME'),
-            password=os.getenv('REDDIT_PASSWORD'),
-            user_agent="script:RedditDailyUpvoter:v1.0 (by u/" + os.getenv('REDDIT_USERNAME') + ")"
-        )
-        logger.info(f"Logged in as: {reddit.user.me()}")
-        return reddit
-    except Exception as e:
-        logger.error(f"Failed to log in: {e}")
-        return None
-
-def upvote_post(reddit):
-    """Find and upvote a post from your chosen subreddit"""
-    if not reddit:
-        return
-    
-    try:
-        # Configure this to your preferred subreddit
-        subreddit_name = os.getenv('TARGET_SUBREDDIT', 'memes')
-        subreddit = reddit.subreddit(subreddit_name)
+        # Get credentials from environment variables
+        client_id = os.environ.get("REDDIT_CLIENT_ID")
+        client_secret = os.environ.get("REDDIT_CLIENT_SECRET")
+        username = os.environ.get("REDDIT_USERNAME")
+        password = os.environ.get("REDDIT_PASSWORD")
+        subreddit_name = os.environ.get("TARGET_SUBREDDIT", "memes")
         
-        # Get hot posts from the subreddit
+        # Initialize Reddit API
+        reddit = praw.Reddit(
+            client_id=client_id,
+            client_secret=client_secret,
+            username=username,
+            password=password,
+            user_agent=f"script:RedditDailyDownvoter:v1.0 (by u/{username})"
+        )
+        
+        # Verify login
+        print(f"Logged in as: {reddit.user.me()}")
+        
+        # Get posts from subreddit
+        subreddit = reddit.subreddit(subreddit_name)
         posts = list(subreddit.hot(limit=20))
         
-        # Choose a random post from the top posts
-        if posts:
-            post = random.choice(posts)
-            
-            # Upvote the post
-            post.upvote()
-            logger.info(f"Upvoted post: '{post.title}' in r/{subreddit_name}")
-            
-            # Optional: Add a short delay to avoid looking like a bot
-            time.sleep(random.uniform(2, 5))
-            return True
-        else:
-            logger.warning(f"No posts found in r/{subreddit_name}")
+        if not posts:
+            print(f"No posts found in r/{subreddit_name}")
             return False
+            
+        # Choose random post and downvote
+        post = random.choice(posts)
+        post.downvote()
+        print(f"Downvoted post: '{post.title}' in r/{subreddit_name}")
+        
+        return True
+        
     except Exception as e:
-        logger.error(f"Error upvoting post: {e}")
+        print(f"Error: {e}")
         return False
 
-def daily_task():
-    """Main function to run daily"""
-    logger.info("Starting daily upvote task")
-    reddit = reddit_login()
-    success = upvote_post(reddit)
-    logger.info(f"Daily task completed. Success: {success}")
-
-def main():
-    # Run once on startup
-    daily_task()
-    
-    # Schedule to run daily at a specific time (adjust time as needed)
-    schedule.every().day.at("10:30").do(daily_task)
-    
-    # Keep the script running
-    logger.info("Script is running. Press Ctrl+C to exit.")
-    try:
-        while True:
-            schedule.run_pending()
-            time.sleep(60)
-    except KeyboardInterrupt:
-        logger.info("Script stopped by user")
-
 if __name__ == "__main__":
-    main()
+    downvote_post()
