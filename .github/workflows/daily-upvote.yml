@@ -1,0 +1,31 @@
+name: Daily Reddit Upvote
+
+on:
+  schedule:
+    - cron: '30 18 * * *' # 00:00 IST (UTC+5:30)
+  workflow_dispatch:
+
+jobs:
+  upvote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install praw
+
+      - name: Upvote Reddit Post
+        env:
+          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+          REDDIT_USERNAME: ${{ secrets.REDDIT_USERNAME }}
+          REDDIT_PASSWORD: ${{ secrets.REDDIT_PASSWORD }}
+          REDDIT_USER_AGENT: ${{ secrets.REDDIT_USER_AGENT }}
+          REDDIT_POST_URL: ${{ secrets.REDDIT_POST_URL }}
+        run: python upvote_post.py
