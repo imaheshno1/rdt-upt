@@ -20,11 +20,11 @@ jobs:
       - name: Install dependencies
         run: pip install praw
 
-      - name: Upvote Reddit Post
+      - name: Upvote a Random Reddit Post
         env:
           REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
           REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
           REDDIT_USERNAME: ${{ secrets.REDDIT_USERNAME }}
           REDDIT_PASSWORD: ${{ secrets.REDDIT_PASSWORD }}
-          REDDIT_POST_URL: ${{ secrets.REDDIT_POST_URL }}
+          TARGET_SUBREDDIT: ${{ secrets.TARGET_SUBREDDIT }}
         run: python upvote_post.py
