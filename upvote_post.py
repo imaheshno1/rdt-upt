@@ -1,11 +1,12 @@
 import os
 import praw
+import random
 
 REDDIT_CLIENT_ID = os.environ["REDDIT_CLIENT_ID"]
 REDDIT_CLIENT_SECRET = os.environ["REDDIT_CLIENT_SECRET"]
 REDDIT_USERNAME = os.environ["REDDIT_USERNAME"]
 REDDIT_PASSWORD = os.environ["REDDIT_PASSWORD"]
-REDDIT_POST_URL = os.environ["REDDIT_POST_URL"]
+TARGET_SUBREDDIT = os.environ["TARGET_SUBREDDIT"]  # The subreddit to target
 
 def main():
     reddit = praw.Reddit(
@@ -15,9 +16,17 @@ def main():
         password=REDDIT_PASSWORD,
         user_agent="github-reddit-upvote-bot"  # Hardcoded user agent
     )
-    submission = reddit.submission(url=REDDIT_POST_URL)
-    submission.upvote()
-    print(f"Upvoted: {REDDIT_POST_URL}")
+
+    # Fetch posts from the target subreddit
+    subreddit = reddit.subreddit(TARGET_SUBREDDIT)
+    posts = list(subreddit.hot(limit=50))  # Fetch the top 50 hot posts
+
+    # Choose a random post from the list
+    random_post = random.choice(posts)
+
+    # Upvote the selected post
+    random_post.upvote()
+    print(f"Upvoted: {random_post.title} (URL: {random_post.url})")
 
 if __name__ == "__main__":
     main()
